@@ -1,0 +1,370 @@
+syntax = "proto3";
+
+package mobile.login.v1;
+option java_package = "com.kik.login.rpc";
+option go_package = "github.com/kikinteractive/xiphias-api-mobile/generated/go/login/v1;login";
+
+import "protobuf_validation.proto";
+import "common_model.proto";
+
+service MobileLogin {
+
+  // Log into an existing Kik account.
+  rpc Login(LoginRequest) returns (LoginResponse) {}
+
+  // Create a new Kik account.
+  rpc Register(RegisterRequest) returns (RegisterResponse) {}
+
+}
+
+message RegisterRequest {
+
+  // User related
+
+  // MUST match `username` field
+  string first_name = 1 [(kik.validation.field_validation) = {
+    mandatory: true
+    min_byte_length: 1
+    max_byte_length: 255
+  }];
+
+  // MUST be empty
+  string last_name = 2 [(kik.validation.field_validation) = {
+    mandatory: false
+    min_byte_length: 1
+    max_byte_length: 255
+  }];
+
+  string username = 3 [(kik.validation.field_validation) = {
+    mandatory: true
+    min_byte_length: 1
+    max_byte_length: 255
+  }];
+  string email = 4 [(kik.validation.field_validation) = {
+    mandatory: true
+    min_byte_length: 1
+    max_byte_length: 255
+  }];
+  string email_derived_passkey = 5 [(kik.validation.field_validation) = {
+    min_byte_length: 32
+    max_byte_length: 32
+    mandatory: false
+  }];
+  string username_derived_passkey = 6 [(kik.validation.field_validation) = {
+    min_byte_length: 32
+    max_byte_length: 32
+    mandatory: false
+  }];
+
+  // Must be older than 18, see:
+  // https://help.kik.com/hc/en-us/articles/33685563526683-Introducing-Age-Verification-and-Changes-to-Account-Registration
+  // Format: yyyy-MM-dd (e.g. 2000-01-01)
+  string birthday = 7 [(kik.validation.field_validation) = {
+    mandatory: true
+    min_byte_length: 10
+    max_byte_length: 10
+  }];
+
+  // Device related
+  // A Kik device ID, a client generated a device prefix (CAN,CIP,etc) + UUID.
+  // Device IDs should be generated on install and persist across the user resetting their account.
+  common.XiDeviceId device_id = 8 [(kik.validation.field_validation) = {
+    mandatory: true
+  }];
+
+  common.XiLocale locale = 9 [(kik.validation.field_validation) = {
+    mandatory: true
+  }];
+  common.XiClientVersion version = 10 [(kik.validation.field_validation) = {
+    mandatory: true
+  }];
+
+  // Misc device info
+  // Mandatory, server validation
+  oneof MiscDeviceInfo {
+    AndroidInfo android_info = 11;
+    IosInfo ios_info = 12;
+  }
+
+  // Verifications
+
+  // Play Integrity Token (Android)
+  string integrity_token = 13 [(kik.validation.field_validation) = {
+    mandatory: false
+  }];
+
+  // reCAPTCHA Mobile Token
+  // Action: 'register'
+  //
+  // Site key (Android): `6LdKmiUpAAAAAHFBRsgyjg7Sy2saQwLtNV_JZ-56`
+  // Package Name (Android): `kik.android`
+  //
+  // Site key (iOS): `6Ld88CYpAAAAAPOMcxVQ7haXoeJpNewmJ25UMAb-`
+  // iOS Bundle ID (iOS): `com.kik.chat`
+  string recaptcha_token = 14 [(kik.validation.field_validation) = {
+    mandatory: true
+  }];
+
+  string apple_device_check_token = 15 [(kik.validation.field_validation) = {
+    mandatory: false
+  }];
+  string apple_device_check_key_id = 16 [(kik.validation.field_validation) = {
+    mandatory: false
+  }];
+  string id_token = 17 [(kik.validation.field_validation) = {
+    mandatory: false
+    max_byte_length: 25000
+  }];
+}
+
+message RegisterResponse {
+  Result result = 1;
+
+  // This is the REFRESH token, used for the JWT authentication service.
+  // It is NOT used for <k authentication, see access_token for that.
+  string session_token = 2;
+
+  // Available on INVALID/ERROR on debug
+  string reason = 3;
+
+  repeated AbTestsEntry ab_tests = 4;
+
+  // This is actually a local part as returned by server.
+  // Caller should ensure that the domain is appended to make it a JID.
+  // e.g. jid.replace("@talk.kik.com", "") + "@talk.kik.com"
+  string jid = 5;
+
+  // New field added by Kik, this one is a custom error that is publicly displayed.
+  // Used for verification errors.
+  // Should be used over 'reason' field when set.
+  string message = 6;
+
+  // This is the ACCESS token, used for binding to Kik.
+  // Usage: <k access-token="{access_token}">
+  string access_token = 7;
+}
+
+message LoginRequest {
+
+  // User related
+  // Mandatory, server validation
+  oneof CredentialsType {
+    UsernameCredentials username_creds = 1;
+    EmailCredentials email_creds = 2;
+    SSOCredentials sso_creds = 12;
+  }
+
+  // Device related
+
+  // A Kik device ID, a client generated a device prefix (CAN,CIP,etc) + UUID.
+  // Device IDs should be generated on install and persist across the user resetting their account.
+  common.XiDeviceId device_id = 3 [(kik.validation.field_validation) = {
+    mandatory: true
+  }];
+  common.XiLocale locale = 4 [(kik.validation.field_validation) = {
+    mandatory: true
+  }];
+  common.XiClientVersion version = 5 [(kik.validation.field_validation) = {
+    mandatory: true
+  }];
+
+  // Misc device info
+  // Mandatory, server validation
+  oneof MiscDeviceInfo {
+    AndroidInfo android_info = 6;
+    IosInfo ios_info = 7;
+  }
+
+  // Verifications
+
+  // Play Integrity Token (Android)
+  string integrity_token = 8 [(kik.validation.field_validation) = {
+    mandatory: false
+  }];
+
+  // reCAPTCHA Mobile Token
+  // Action: 'login'
+  //
+  // Site key (Android): `6LdKmiUpAAAAAHFBRsgyjg7Sy2saQwLtNV_JZ-56`
+  // Package Name (Android): `kik.android`
+  //
+  // Site key (iOS): `6Ld88CYpAAAAAPOMcxVQ7haXoeJpNewmJ25UMAb-`
+  // iOS Bundle ID (iOS): `com.kik.chat`
+  string recaptcha_token = 9 [(kik.validation.field_validation) = {
+    mandatory: true
+  }];
+  string apple_device_check_token = 10 [(kik.validation.field_validation) = {
+    mandatory: false
+  }];
+  string apple_device_check_key_id = 11 [(kik.validation.field_validation) = {
+    mandatory: false
+  }];
+}
+
+message LoginResponse {
+  Result result = 1;
+
+  // This is the REFRESH token, used for the JWT authentication service.
+  // It is NOT used for <k authentication, see access_token for that.
+  // Only set if result == OK
+  string session_token = 2;
+
+  // Available on INVALID/ERROR on debug.
+  string reason = 3;
+
+  // Key is the name, value is a base64 encoded proto message
+  // XDataRecordSets 'record-set' are not included here.
+  repeated XdataRecordsEntry xdata_records = 4;
+
+  // Key is the name of the experiment, value is the current setting.
+  repeated AbTestsEntry ab_tests = 5;
+
+  // This is actually a local part as returned by server.
+  // Caller should ensure that the domain is appended to make it a JID.
+  // e.g. jid.replace("@talk.kik.com", "") + "@talk.kik.com"
+  string jid = 6;
+
+  // Username of the authed user
+  string username = 7;
+
+  // Email of the authed user
+  string email = 8;
+
+  // New field added by Kik, this one is a custom error that is publicly displayed.
+  // Used for verification errors.
+  // Should be used over 'reason' field when set.
+  string message = 9;
+
+  // This is the ACCESS token, used for binding to Kik.
+  // Usage: <k access-token="{access_token}">
+  // Only set if result == OK
+  string access_token = 10;
+
+  // Additional directives for the client.
+  // Only set if result == OK
+  repeated Action actions = 11;
+}
+
+message UsernameCredentials {
+  string username = 1 [(kik.validation.field_validation) = {
+    mandatory: false
+    min_byte_length: 1
+    max_byte_length: 255
+  }];
+  string username_derived_passkey = 2 [(kik.validation.field_validation) = {
+    min_byte_length: 32
+    max_byte_length: 32
+    mandatory: true
+  }];
+}
+
+message EmailCredentials {
+  string email = 1 [(kik.validation.field_validation) = {
+    mandatory: false
+    min_byte_length: 1
+    max_byte_length: 255
+  }];
+  string email_derived_passkey = 2 [(kik.validation.field_validation) = {
+    min_byte_length: 32
+    max_byte_length: 32
+    mandatory: true
+  }];
+}
+
+message SSOCredentials {
+  string id_token = 1 [(kik.validation.field_validation) = {
+    mandatory: true
+    min_byte_length: 1
+    max_byte_length: 25000
+  }];
+}
+
+message AndroidInfo {
+  string brand = 1; // android.os.Build.BRAND (or bot name)
+
+  // Mobile country code see:https://en.wikipedia.org/wiki/Mobile_country_code
+  // See https://developer.android.com/reference/android/telephony/TelephonyManager#getNetworkOperator()
+  // e.g. "310260"
+  string operator = 2;
+
+  // android.os.Build.VERSION.SDK_INT
+  string android_sdk = 3;
+
+  // 16 character hex string (lowercase)
+  // See https://developer.android.com/reference/android/provider/Settings.Secure#ANDROID_ID
+  string android_id = 4 [(kik.validation.field_validation) = {
+    mandatory: false
+    min_byte_length: 16
+    max_byte_length: 16
+  }];
+
+  string logins_since_install = 5; // "0"
+  string registration_since_install = 6; // "0"
+  string install_date = 7; // Unix millis
+  string install_referrer = 8; // utm_source=google-play&utm_medium=organic
+  string os_version = 9; // android.os.Build.VERSION.RELEASE (Only used for JWT service)
+}
+
+message IosInfo {
+  string system_version = 1; // e.g. "15.8.3"
+
+  // Random UUID (V4, uppercase)
+  string iphone_idfv = 2 [(kik.validation.field_validation) = {
+    mandatory: false
+    min_byte_length: 36
+    max_byte_length: 36
+  }];
+
+  string enterprise = 3; // "false"
+  string country_code = 4; // "US"
+}
+
+enum Result {
+  OK = 0;
+  SERVER_ERROR = 1;
+  INVALID = 2; //Missing mandatory device info, rate limiting...
+  SERVICE_UNAVAILABLE = 3;
+  NAME_REJECTED = 4; //First name / Last name
+  USERNAME_REJECTED = 5;
+  EMAIL_REJECTED = 6;
+  BIRTHDAY_REJECTED = 7;
+  ALREADY_REGISTERED = 8;
+  USERNAME_EXISTS = 9;
+
+  // Request rejected for anti spam reasons
+  VERIFICATION_FAILED = 10;
+
+  NOT_REGISTERED = 11;
+  INVALID_PASSWORD = 12;
+  ACCT_TERMINATED = 13;
+  MISSING_CREDS = 14;
+  EXPIRED_SSO_TOKEN = 15;
+  USER_TEMP_BANNED = 16;
+}
+
+message Action {
+  // Known ids:
+  // 'age-verification' (triggered by authenticating with a IP address in the UK)
+  string id = 1;
+
+  // Whether the action is required to be performed by the client
+  bool required = 2;
+
+  // Additional key-value pairs related to the action
+  repeated ActionParams params = 3;
+}
+
+message ActionParams {
+  string key = 1;
+  string value = 2;
+}
+
+message XdataRecordsEntry {
+  string key = 1;
+  string value = 2;
+}
+
+message AbTestsEntry {
+  string key = 1;
+  string value = 2;
+}
