@@ -1,5 +1,5 @@
-setuptools~=68.2.0
-requests~=2.31.0
+setuptools~=70.0.0
+requests~=2.32.3
 bs4~=0.0.1
 beautifulsoup4~=4.12.2
 rsa~=4.9
@@ -11,3 +11,5 @@ python-dotenv~=1.0.0
 PyYAML~=6.0.1
 defusedxml~=0.7.1
 lxml~=4.9.3
+grpcio-tools~=1.70.0
+grpclib[protobuf]~=0.4.7
