@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package common.antispam.appledevicecheck.v1;
+
+option java_package = "com.kik.antispam.appledevicecheck.model";
+option go_package = "github.com/kikinteractive/xiphias-model-common/generated/go/antispam/appledevicecheck/v1;appledevicecheck";
+
+enum AssertionAction {
+	TOPIC_POST = 0;
+	PROFILE_PICTURE_UPLOAD = 1;
+	JWT_REFRESH = 2;
+	GROUP_CREATION = 3;
+}
+
+
+message CreateTopicAssertion {
+  string text = 1;
+  string background_id = 2;
+  string nonce = 3;
+}
+
+message ProfilePictureUploadAssertion {
+  string device_id = 1;
+  string version = 2;
+  string blockhash_scaled = 3;
+  string sha1_scaled = 4;
+  string sha1_original = 5;
+  string nonce = 6;
+}
+
+// clientHashData is the SHA256 hash of the serialized bytes of this message
+message JwtRefreshAssertion {
+  string username = 1;  // Convert to lowercase first
+  string device_id = 2; // Prefix omitted
+  string jti = 3;       // The nonce goes here, even though it shouldn't
+  string nonce = 4;     // Set to empty
+}
+
+message CreateGroupAssertion {
+  string username = 1;
+  string device_id = 2;
+  string group_name = 3;
+  string nonce = 4;
+}
+

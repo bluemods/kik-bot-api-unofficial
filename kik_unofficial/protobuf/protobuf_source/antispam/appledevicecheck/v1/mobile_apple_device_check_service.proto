@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package mobile.antispam.appledevicecheck.v1;
+option java_package = "com.kik.antispam.appledevicecheck.rpc";
+option go_package = "github.com/kikinteractive/xiphias-api-mobile/generated/go/antispam/appledevicecheck/v1;appledevicecheck";
+
+// import "common_rpc.proto";
+import "protobuf_validation.proto";
+import "antispam/appledevicecheck/v1/assertion_common.proto";
+
+// Apple DeviceCheck is an iOS feature that can be used to verify the authenticity of devices and applications on
+// the platform. From the iOS clients' perspective, the service works as follows:
+//
+//          - bind
+//              - if authenticated, check if this deviceID/username pair has been previously verified (via storage)
+//                  - if already verified, no action required
+//                  - if not already verified, action required
+//              - if anonymous, action required
+//
+//          - if action required:
+//              - request nonce from Kik Apple Device Check service
+//              - make attestation request with nonce to Apple
+//              - verify JWS result with Kik AppleDeviceCheck service
+//                  - if authenticated and result is OK, mark this deviceID/username pair as verified in storage
+service AppleDeviceCheck {
+
+  // Get a nonce to be signed using Apple DeviceCheck
+  // that can later be verified on the Kik verification service backend.
+  //
+  // See https://developer.apple.com/documentation/devicecheck/dcappattestservice/generatekey(completionhandler:)
+  // and https://developer.apple.com/documentation/devicecheck/dcappattestservice/attestkey(_:clientdatahash:completionhandler:)
+  rpc GetNonce(GetNonceRequest) returns (GetNonceResponse) {}
+
+  // Get an assertion nonce to be signed using Apple DeviceCheck
+  // that can later be verified on the Kik verification service backend.
+  //
+  // See https://developer.apple.com/documentation/devicecheck/dcappattestservice/generateassertion(_:clientdatahash:completionhandler:)
+  rpc GetAssertionNonce(GetAssertionNonceRequest) returns (GetAssertionNonceResponse) {}
+
+  // NOTE: this API is not used.
+  // Instead, the attestation result is sent directly as part of a login or signup request.
+  //
+  // Given the token payload from the Apple DeviceCheck API call, verify the request using the provided certificate
+  // chain on the Kik verification backend.
+  //
+  // Clients are provided very little information in the response. As long as the nonce is valid (matches last
+  // nonce requested by client, not expired) and the request is well-formed (valid JWS, expected fields present
+  // in payload), the client will receive an OK response. Clients are *not* informed of whether or not the actual
+  // signature was valid, or if the client "verified" successfully with the backend.
+  rpc VerifyAttestationResult(VerifyAttestationResultRequest) returns (VerifyAttestationResultResponse) {}
+}
+
+//----------------------------------------------------------------------------------
+// Request/Response Types
+//----------------------------------------------------------------------------------
+
+// Not using VoidRequest for compatibility reasons
+// Must remain wire compatible with VoidRequest (currently empty)
+message GetNonceRequest {
+
+}
+
+message GetNonceResponse {
+  Result result = 1;
+  enum Result {
+    OK = 0;
+  }
+
+  // A nonce that must be signed via the attestation API in order to validate with the Kik API verification
+  // service backend.
+  string nonce = 2 [(kik.validation.field_validation) = {
+    mandatory: true
+    min_byte_length: 16
+  }];
+}
+
+message GetAssertionNonceRequest {
+  common.antispam.appledevicecheck.v1.AssertionAction action = 1;
+}
+
+message GetAssertionNonceResponse {
+  Result result = 1;
+  enum Result {
+    OK = 0;
+  }
+  string nonce = 2 [(kik.validation.field_validation) = {
+    mandatory: true
+    min_byte_length: 16
+  }];
+}
+
+message VerifyAttestationResultRequest {
+  // The Apple Token generated, needs to be Base64 encoded
+  string token = 1 [(kik.validation.field_validation) = {
+    mandatory: true
+    min_byte_length: 1
+    max_byte_length: 25000 // sanity bound
+  }];
+}
+
+message VerifyAttestationResultResponse {
+  Result result = 1;
+  enum Result {
+    // The request was syntactically well-formed with a valid nonce. The client need not retry.
+    OK = 0;
+
+    // The nonce provided either expired, or did not match the last nonce provided to the client.
+    INVALID_NONCE = 1;
+
+    // The request was syntactically malformed (invalid JWS).
+    MALFORMED_REQUEST = 2;
+  }
+}
