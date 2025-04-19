@@ -26,8 +26,8 @@ class MobileLoginJwtBase(abc.ABC):
             '/mobile.login.jwt.v1.MobileLoginJwt/RefreshToken': grpclib.const.Handler(
                 self.RefreshToken,
                 grpclib.const.Cardinality.UNARY_UNARY,
-                kik_unofficial.protobuf.login.jwt.v1.mobile_jwt_service_pb2.RefreshTokenRequest,
-                kik_unofficial.protobuf.login.jwt.v1.mobile_jwt_service_pb2.RefreshTokenResponse,
+kik_unofficial.protobuf.                login.jwt.v1.mobile_jwt_service_pb2.RefreshTokenRequest,
+kik_unofficial.protobuf.                login.jwt.v1.mobile_jwt_service_pb2.RefreshTokenResponse,
             ),
         }
 
@@ -38,6 +38,6 @@ class MobileLoginJwtStub:
         self.RefreshToken = grpclib.client.UnaryUnaryMethod(
             channel,
             '/mobile.login.jwt.v1.MobileLoginJwt/RefreshToken',
-            kik_unofficial.protobuf.login.jwt.v1.mobile_jwt_service_pb2.RefreshTokenRequest,
-            kik_unofficial.protobuf.login.jwt.v1.mobile_jwt_service_pb2.RefreshTokenResponse,
+kik_unofficial.protobuf.            login.jwt.v1.mobile_jwt_service_pb2.RefreshTokenRequest,
+kik_unofficial.protobuf.            login.jwt.v1.mobile_jwt_service_pb2.RefreshTokenResponse,
         )

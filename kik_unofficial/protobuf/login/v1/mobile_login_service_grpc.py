@@ -29,14 +29,14 @@ class MobileLoginBase(abc.ABC):
             '/mobile.login.v1.MobileLogin/Login': grpclib.const.Handler(
                 self.Login,
                 grpclib.const.Cardinality.UNARY_UNARY,
-                kik_unofficial.protobuf.login.v1.mobile_login_service_pb2.LoginRequest,
-                kik_unofficial.protobuf.login.v1.mobile_login_service_pb2.LoginResponse,
+kik_unofficial.protobuf.                login.v1.mobile_login_service_pb2.LoginRequest,
+kik_unofficial.protobuf.                login.v1.mobile_login_service_pb2.LoginResponse,
             ),
             '/mobile.login.v1.MobileLogin/Register': grpclib.const.Handler(
                 self.Register,
                 grpclib.const.Cardinality.UNARY_UNARY,
-                kik_unofficial.protobuf.login.v1.mobile_login_service_pb2.RegisterRequest,
-                kik_unofficial.protobuf.login.v1.mobile_login_service_pb2.RegisterResponse,
+kik_unofficial.protobuf.                login.v1.mobile_login_service_pb2.RegisterRequest,
+kik_unofficial.protobuf.                login.v1.mobile_login_service_pb2.RegisterResponse,
             ),
         }
 
@@ -47,12 +47,12 @@ class MobileLoginStub:
         self.Login = grpclib.client.UnaryUnaryMethod(
             channel,
             '/mobile.login.v1.MobileLogin/Login',
-            kik_unofficial.protobuf.login.v1.mobile_login_service_pb2.LoginRequest,
-            kik_unofficial.protobuf.login.v1.mobile_login_service_pb2.LoginResponse,
+kik_unofficial.protobuf.            login.v1.mobile_login_service_pb2.LoginRequest,
+kik_unofficial.protobuf.            login.v1.mobile_login_service_pb2.LoginResponse,
         )
         self.Register = grpclib.client.UnaryUnaryMethod(
             channel,
             '/mobile.login.v1.MobileLogin/Register',
-            kik_unofficial.protobuf.login.v1.mobile_login_service_pb2.RegisterRequest,
-            kik_unofficial.protobuf.login.v1.mobile_login_service_pb2.RegisterResponse,
+kik_unofficial.protobuf.            login.v1.mobile_login_service_pb2.RegisterRequest,
+kik_unofficial.protobuf.            login.v1.mobile_login_service_pb2.RegisterResponse,
         )
