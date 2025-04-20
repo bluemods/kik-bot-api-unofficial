@@ -28,12 +28,12 @@ message ProfilePictureUploadAssertion {
   string nonce = 6;
 }
 
-// clientHashData is the SHA256 hash of the serialized bytes of this message
+// clientDataHash is the SHA256 hash of the serialized bytes of this message
 message JwtRefreshAssertion {
-  string username = 1;  // Convert to lowercase first
-  string device_id = 2; // Prefix omitted
+  string username = 1;  // The username of the account (CASE-SENSITIVE)
+  string device_id = 2; // Kik device id (no prefix)
   string jti = 3;       // The nonce goes here, even though it shouldn't
-  string nonce = 4;     // Set to empty
+  string nonce = 4;     // Set to an empty string
 }
 
 message CreateGroupAssertion {
